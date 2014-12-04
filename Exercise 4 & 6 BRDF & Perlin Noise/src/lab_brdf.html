@@ -1,0 +1,132 @@
+<!DOCTYPE Html>
+<html>
+  <head>
+    <title>Exercise 4: Appearance Modeling</title>
+    <link rel="stylesheet" type="text/css" href="brdf.css"/>
+
+    <script type="text/javascript" src="jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="ShaderLoader.min.js"></script>
+    <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="teapot.js"></script>
+    <script type="text/javascript" src="sphere.js"></script>
+    <script type="text/javascript" src="brdf.js"></script>
+
+    <!--
+      * define material properties
+
+      modify the two sets of meterial properties to best replicate the given materials
+    -->
+
+    <script type="text/javascript">
+      // be warned that objects are not copied, but their references.
+      var WHITE3 = new Float32Array([1, 1, 1]);
+      var RED3 = new Float32Array([1, 0.5, 0.5]);
+      var BLUE3 = new Float32Array([.7, .7, 1]);
+      var STEEL = new Float32Array([225 / 255, 222 / 255, 232 / 255]);
+      var STEEL2 = new Float32Array([185 / 255, 182 / 255, 192 / 255]);
+      var HEMATITE = new Float32Array([43 / 255, 43 / 255, 43 / 255]);
+
+      // dummy material properties
+      var materials = new Array();
+      materials.push({ambient: STEEL, diffuse: STEEL, specular: STEEL2});
+      materials.push({ambient: HEMATITE, diffuse: HEMATITE, specular: WHITE3});
+      // materials.push({ambient: RED3, diffuse: RED3, specular: WHITE3});
+      // materials.push({ambient: BLUE3, diffuse: BLUE3, specular: WHITE3});
+
+      // you have 3 point light sources: the number of lights can be hard-coded in the shaders
+    </script>
+
+    <!--
+      * uniforms that will be available in shaders
+
+      the following attributes and uniforms are set by javascript so that they can
+      be used in glsl.
+
+      // vertex attributes
+      attribute vec3 vertexPosition;
+      attribute vec3 vertexNormal;
+      attribute vec2 textureCoord;
+
+      // transformation matrices
+      uniform mat4 projectionMatrix;
+      uniform mat4 modelViewMatrix;
+      uniform mat3 normalMatrix;
+
+      // material properties
+      uniform vec3 materialAmbientColor;
+      uniform vec3 materialDiffuseColor;
+      uniform vec3 materialSpecularColor;
+
+      // point light sources
+      uniform vec3 lightPosition[3];
+      uniform vec3 lightColor[3];
+      uniform vec3 globalAmbientLightColor;
+
+      write shaders using those attributes and uniforms to implement each brdf.
+    -->
+
+    <!--
+      * how to include your shader files?
+      
+      create a vertex and a fragment shader file in the "brdf" folder
+      (for example "shader_name.glslv" and "shader_name.glslf")
+      (you can copy'n'paste the ambient example)
+
+      then add a line below:
+        shadersList.push("shader_name_without_extension");
+
+      * want slider controls to tweak parameters?
+
+      to have the slider controls for optional material parameters, create a file
+      named "shader_name.json" in the "brdf" folder, and place the slider
+      specifications. please refer to ambient.json for an example.
+    -->
+
+    <script type="text/javascript">
+      shadersList.push("ambient");
+      // add more shaders here
+      shadersList.push("lambertian");
+      shadersList.push("phong");
+      shadersList.push("blinn-phong");
+      shadersList.push("ward");
+      shadersList.push("cook-torrance");
+      shadersList.push("svbrdf");
+    </script>
+  </head>
+
+  <body onload="init();">
+    <script language="JavaScript">
+      window.onbeforeunload = function()
+      {
+        return "Warning! If you have edited the shaders in the textarea, you need to export them, otherwise your work will be lost.";
+      }
+    </script>
+    
+    <canvas id="screen">Your browser may not support HTML5 canvas.</canvas>
+    <div id="message" class="unselectable"></div>
+    
+    <div id="controls">
+      <button id="show_button" onclick="showShader()"></button>
+      <select id="shaderSelector" onChange="selectShader(this.selectedIndex)"></select> 
+      <button id="toggle_material" onclick="toggleMaterial()">Toggle Material</button>
+      <button id="toggle_object" onclick="toggleModel()">Toggle Model</button>
+    </div>
+    
+    <div id="editor">
+      <div id="editor_container">
+        <button id="compile_button" onclick="compileShader()">Compile Shader</button>
+        <button id="reload_button" onclick="loadShaders()">Reload Shaders</button>
+        <button id="export_button" onclick="exportShaders()">Export Shaders</button>
+        <button id="export_image_button" onclick="exportPNG()">Export Image</button>
+        <h1>Parameters:</h1>
+        <div id ="editor_options"></div>
+        <h1>Vertex Shader:</h1>
+        <textarea id="editor_vshader"></textarea>
+        <h1>Fragment Shader:</h1>
+        <textarea id="editor_fshader"></textarea>
+      </div>
+    </div>
+
+    <a id="exportLink" class="hidden"/>
+  </body>
+</html>

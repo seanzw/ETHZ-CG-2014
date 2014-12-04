@@ -1,0 +1,142 @@
+/* css for the brdf exercise */
+
+body { 
+	font-size: 14pt; margin: 0; padding: 0; overflow: hidden; background-color: gray; }
+
+#screen { top: 0px; position: absolute; }
+
+#message {
+	position: absolute;
+	top: 10px; right: 15px;
+	width: 250px; height: 120px;
+	color: white;
+	font-family: monospace;
+	font-size: 12px;
+	line-height: 12px;
+	/* overflow: hidden; */
+	/* background-color: red; */
+}
+
+#exportLink { display: none; }
+
+.unselectable { 
+	-moz-user-select: -moz-none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	cursor: default;
+	pointer-events: none; /* a simplistic trick that the mouse events go
+	through this layer, which works with safari, chrome, and firefox */
+}
+
+.hidden { display: none; }
+
+#controls {
+	position: absolute;
+	padding: 10px;
+	z-index: 99;
+	white-space: nowrap;
+}
+
+#editor {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	background-color: #dddddd;
+	padding-left: 10px;
+	padding-right: 15px;
+	overflow-y: auto;
+}
+
+#editor_container {
+	margin-top: 50px;
+	white-space: nowrap;
+}
+
+#editor_vshader {
+	width: 610px;
+	height: 200px;
+}
+#editor_fshader {
+	width: 610px;
+	height: 400px;
+}
+
+button, select {
+	font-size: 10pt;
+	width: 150px;
+  height: 32px;
+	text-align: left;
+}
+
+select {
+  -webkit-appearance: menulist-button;
+}
+
+textarea {
+	font-family: monospace;
+	font-size: 9pt;
+}
+
+h1 {
+	margin-top: 12px;
+	margin-bottom: 4px;
+	font-size: 11pt;
+	font-family: sans-serif;
+}
+
+/* for sliders */
+
+#editor_options {
+	width: 610px;
+	height: auto;
+}
+
+.slider {
+	margin: 0;
+	padding: 0;
+	font-size: 10pt;
+	font-family: sans-serif;
+	white-space: nowrap;
+}
+
+.slider_label {
+	display: inline-block;
+	width: 90px;
+	vertical-align: middle;
+	white-space: normal;
+	/*text-align: right;*/
+	margin-right: 5px;
+}
+
+.slider_control {
+	display: inline-block;
+	width: 420px;
+	vertical-align: middle;
+	height: 18px;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.slider_value {
+	display: inline-block;
+	width: 70px;
+	vertical-align: middle;
+	margin-left: 5px;
+}
+
+/* chrome on linux workaround */
+
+input[type=range]::-webkit-slider-runnable-track {
+	-webkit-appearance: none;
+	background-color: #ccc;
+	height: 5px;
+	border-radius: 5px;
+	box-shadow: inset 1px 1px 3px rgba(0,0,0,0.4);
+} 
+
+input[type=range]::-webkit-slider-thumb {
+	margin-top: -8px;
+}
