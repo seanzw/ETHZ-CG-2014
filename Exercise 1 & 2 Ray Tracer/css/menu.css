@@ -1,0 +1,17 @@
+#menu {
+	position: absolute;
+	width: 20%;
+	top: 7%;
+	left: 2%;
+}
+
+.module {
+	margin-top: 10px; 
+}
+
+#myCanvasDiv {
+	width: 800px; 
+	height: 600px; 
+	border: 1px solid black; 
+	margin-top: 10px;
+}

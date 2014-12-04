@@ -1,0 +1,79 @@
+README
+
+A1
+
+Basically I just implement some classes, sphere, camera, material, scene
+
+	Scene class
+
+		This is the top class. It contains an array of all the objects and an array of all point lights. All the rendering stuff starts here.
+
+		RayTracing: the recursive function to do ray tracing
+
+		globalIntersect: detect the intersection with all the objects
+
+		Phongshading: using Phong shading model to get the color
+
+	Material class:
+
+		This is just basical the class containing all the imformation used in the Phong shading model
+
+	Sphere class:
+
+		Class for sphere, with the center and radius
+
+		intersect: function to do the intersection detection, using the early termination in the slides
+
+		normal: function to return the normal vector of a given point
+
+	Camera class
+
+		Class for camera
+
+		shootRay: shoot the ray at (PixelX, PixelY)
+
+		shootRayStereoscopic: shoot the two steroscopic ray, used in B4
+
+		shootRayAperture: shoot the ray according to the aperture and focus parameter
+
+I just using the class above and load everthing into the top frame, and then done.
+
+B1:
+
+First I need to modify the material class and add the parameter for reflection and refraction.
+
+Then rewrite the Scene.rayTraing method to make it recursive
+
+B2:
+
+Shoot 16 rays per pixel, using Math.random()
+
+B3:
+
+I think this is the most difficult part of the whole exercises. I implement two new mathematic class: Vector4 and Matrix4, and two new object class: Cylinder and Ellipsoid
+
+	Vector4 and Matrix4:
+
+		these two classes are designed for the homogenius coordinate. With these class we can do all the projective transformation
+
+	Ellipsoid:
+
+		The class for ellipsoid. The ellipsoid must be alined along the axis. It was represented as the 4 by 4 matrix which will map the ellipsoid into a unit sphere at the origin. 
+
+		intersect: method to detect the intersect. Instead of doing the intersection detection directly, we first transform the ellipsoid into a unit sphere at the origin. Then we do the detection and get the hit point if the ray hits the ellipsoid. Finally we transform everything back to get the solution
+
+		normal: method to find the normal vector at a certain point.
+
+	Cylinder:
+
+		The class for cylinder. Basically it's the same method as the ellipsoid, except we transform the ellipic cylinder into a round cylinder. And then do the intersection detection in 2-D plane.
+
+B4:
+
+Using camera.shootRaySteroscopic to do this.
+
+Bonus:
+
+Basically we approximate this depth field by shooting serval rays for one pixel. all the rays starts from some point on the aperture and will focus at the same point on the focus plane.
+
+
