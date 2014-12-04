@@ -1,26 +1,14 @@
-ethz-computer-graphics-BRDF
+ethz-computer-graphics-BSpline & Surface Subdivision
 ===========================
-This is my solution to BRDF exercise of ethz computer graphics 2014. There are two materials, polished steel and hematite. The default material is steel. If you want to get hematite, please adjust the parameters as described in each BRDF. You can always modify the brightness by changing the intensity of the three point light source.
+This the solution for exercise 5.
 
-### Lambertian
-The Lambertian BRDF is not enought to simulate the steel and hematite since there is no specular term.
+### BSpline
+Not much to say about BSpline. Just use de Boor algorithm to generate points on the spline and connect them.
 
-### Phong
-Phong is not enought to render the steel as it always gives a plastic feeling. The only thing we can do is modify the shineness of the material. Hematite looks good.
+### Surface Subdivision
+#### Loop
+Loop's algorithm can only deal with triangle mesh. And it's easy to implement. Use different weight for the boundary and then everything is fine.
+#### Catmull-Clark
+Here I found three ways to deal with the boundary.([here](http://xrt.wikidot.com/blog:_start/tag/catmull/category/blog)). I choose the second one and the boundary looks quite well.
 
-### Blinn-Phong
-Blinn-Phong uses the halfway vector and simplify the calculation. Steel still looks like plastic.
-
-### Ward
-Ward's anisotropic model is enough to model these two materials. I find a precise and cheaper formula from [Cornell University](http://www.graphics.cornell.edu/~bjw/wardnotes.pdf). For steel alphaX is 0.2 and alphaY = 0.8. For Hematite alphaX = alphaY = 0.2. And the result is pretty good.
-
-### Cook-Torrance
-Here the steel looks nice. The hematite is also very good. And I use two weighted Beckmann distributions.
-
-For Steel the IOR is 2.5. 
-
-For Hematite the IOR is 2.9. The both Beckmann distribution is set to 0.2. Kd equals 0.3.
-
-
-### Spatially Varying BRDF
-I tried to use perlin noise but still can't figure out how to generate the rusty steel. Here I just generate some weird marble texture. The generator of perlin noise comes from [here](https://github.com/ashima/webgl-noise)
+It takes every boundary edge as infinitely sharp creases, which means the edge point on this boundary edge will be the average of two endpoints of this edge. And all the boundary vertices are treated as creases vertices. The new vertice is a weighted average of the old vertice (3/4) and two other boundary vertices(1/8).
