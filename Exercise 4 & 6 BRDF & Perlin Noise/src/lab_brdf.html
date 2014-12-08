@@ -25,13 +25,15 @@
       var STEEL = new Float32Array([225 / 255, 222 / 255, 232 / 255]);
       var STEEL2 = new Float32Array([185 / 255, 182 / 255, 192 / 255]);
       var HEMATITE = new Float32Array([43 / 255, 43 / 255, 43 / 255]);
+      var MARBLEWHITE = new Float32Array([238 / 255, 234 / 255, 247 / 255]);
+      var WOODBROWN = new Float32Array([182 / 255, 155 / 255, 76 / 255]);
 
       // dummy material properties
       var materials = new Array();
       materials.push({ambient: STEEL, diffuse: STEEL, specular: STEEL2});
       materials.push({ambient: HEMATITE, diffuse: HEMATITE, specular: WHITE3});
-      // materials.push({ambient: RED3, diffuse: RED3, specular: WHITE3});
-      // materials.push({ambient: BLUE3, diffuse: BLUE3, specular: WHITE3});
+      materials.push({ambient: MARBLEWHITE, diffuse: MARBLEWHITE, specular: WHITE3});
+      materials.push({ambient: WOODBROWN, diffuse: WOODBROWN, specular: WHITE3});
 
       // you have 3 point light sources: the number of lights can be hard-coded in the shaders
     </script>
@@ -91,6 +93,8 @@
       shadersList.push("ward");
       shadersList.push("cook-torrance");
       shadersList.push("svbrdf");
+      shadersList.push("wood");
+      shadersList.push("marble");
     </script>
   </head>
 

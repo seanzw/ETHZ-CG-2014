@@ -4,45 +4,38 @@ uniform vec3 materialAmbientColor;
 uniform vec3 materialDiffuseColor;
 uniform vec3 materialSpecularColor;
 
-uniform float f0;
-uniform float m1;
-uniform float w1;
-uniform float m2;
-uniform float kd;
-
-float PI = 3.14159265358979323846264;
-
-vec3 c1 = vec3(183.0/255.0, 65.0/255.0, 14.0/255.0);
-vec3 c2 = vec3(165.0/255.0, 93.0/255.0, 53.0/255.0);
-vec3 c3 = vec3(128.0/255.0, 44.0/255.0, 8.0/255.0);
+uniform float materialSpecularPower;
+uniform float intensity;
 
 uniform vec3 lightPosition[3];
 uniform vec3 lightColor[3];
 uniform vec3 globalAmbientLightColor;
 
+uniform float persistence;
+uniform float offset;
+
 varying vec2 vTC;
 varying vec3 vN;
 varying vec4 vP;
-varying vec3 vTruePosition;
+varying vec3 vObjectSpacePosition;
+
+const float octave = 10.0;
+
 
 // function used to generate 3D Perlin noise
-vec3 mod289(vec3 x)
-{
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
+vec3 mod289(vec3 x) {
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
-vec4 mod289(vec4 x)
-{
-  return x - floor(x * (1.0 / 289.0)) * 289.0;
+vec4 mod289(vec4 x) {
+    return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
-vec4 permute(vec4 x)
-{
-  return mod289(((x*34.0)+1.0)*x);
+vec4 permute(vec4 x) {
+    return mod289(((x*34.0)+1.0)*x);
 }
 
-vec4 taylorInvSqrt(vec4 r)
-{
+vec4 taylorInvSqrt(vec4 r) {
   return 1.79284291400159 - 0.85373472095314 * r;
 }
 
@@ -50,8 +43,7 @@ vec3 fade(vec3 t) {
   return t*t*t*(t*(t*6.0-15.0)+10.0);
 }
 
-// Classic Perlin noise
-float cnoise(vec3 P)
+float PerlinNoise(vec3 P)
 {
   vec3 Pi0 = floor(P); // Integer part for indexing
   vec3 Pi1 = Pi0 + vec3(1.0); // Integer part + 1
@@ -120,62 +112,50 @@ float cnoise(vec3 P)
   return 2.2 * n_xyz;
 }
 
-vec3 getColor(vec3 TC) {
-    float scale = .5;
+vec3 getColor(vec3 P) {
+
+    float scale = 0.5;
     float shift = 1000.0;
-    float x = scale * TC.x + shift + 10.0;
-    float y = scale * TC.y + shift - 100000.0;
-    float z = scale * TC.z + shift + 0.0;
+    float x = scale * P.x + shift + 10.0;
+    float y = scale * P.y + shift - 10.0;
+    float z = scale * P.z + shift + 0.0;
 
-    float frequency = 1.;
-    float amplitude = 1.;
-    float c = 0.;
-    for (float i = 0.; i < 10.0; i++) {
-        float p = cnoise(frequency * vec3(x,y,z));
-        c += amplitude * abs(p);
-        amplitude *= 0.5;
-        frequency *= 2.0;
+    vec3 t = vec3(x, y, z);
+    float noise = 0.0;
+    float frequence = 1.0;
+    float amplitude = 1.0;
+    for (float i = 0.0; i < octave; ++i) {
+        noise += amplitude * PerlinNoise(frequence * t);
+        frequence *= 2.0;
+        amplitude *= persistence;
     }
-    c = abs(sin(x + c));
 
-    return vec3(c, c, c);
+    noise = abs(cos(sqrt(x * z) + offset * noise));
+
+    return vec3(noise, noise, noise);
 }
 
-void main() {
+
+void main(void) {
     vec3 vNormal = normalize(vN);
+    vec3 amb_color = globalAmbientLightColor * materialAmbientColor;
     vec3 vPosition = vP.xyz / vP.w;
     vec3 eye = normalize(-vPosition);
-    vec3 ambColor = materialAmbientColor * globalAmbientLightColor;
-    vec3 difColor = vec3(0, 0, 0);
-    vec3 speColor = vec3(0, 0, 0);
+    vec3 dif_color = vec3(0, 0, 0);
+    vec3 spe_color = vec3(0, 0, 0);
     for (int i = 0; i < 3; ++i) {
-        vec3 toLight = normalize(lightPosition[i] - vPosition);
-        float nl = dot(toLight, vNormal);
-        float nr = dot(eye, vNormal);
-        if (nl > 0. && nr > 0.) {
-            difColor = difColor + (nl / PI) * materialDiffuseColor * lightColor[i];
-            vec3 h = normalize(toLight + eye);
-            float nh = max(0., dot(vNormal, h));
-            float hr = max(0., dot(h, eye));
-
-            // Beckmann distribution
-            float tanAlpha2 = (1.0 - nh * nh) / (nh * nh);
-            float D1 = exp(-(tanAlpha2 / (m1 * m1))) / (PI * pow(m1, 2.0) * pow(nh, 4.0));
-            float D2 = exp(-(tanAlpha2 / (m2 * m2))) / (PI * pow(m2, 2.0) * pow(nh, 4.0));
-            float D = w1 * D1 + (1.0 - w1) * D2;
-
-            float G = min(1.0, min((2.0 * nh * nr) / nr, (2.0 * nh * nl) / nr));
-
-            // schlick approximation to calculate fresnel
-            float F = f0 + (1.0 - f0) * pow(1.0 - nl, 5.0);
-
-            float Rs = (F * G * D) / (nr * nl);
-            speColor = speColor + Rs * nl * materialSpecularColor * lightColor[i];
+        vec3 lightP = lightPosition[i] - vPosition;
+        float attenuation = intensity / length(lightP);
+        vec3 toLight = normalize(lightP);
+        float c = dot(toLight, vNormal);
+        if (c > 0.) {
+            dif_color = dif_color + attenuation * c * materialDiffuseColor * lightColor[i];
+            vec3 R = reflect(-toLight, vNormal);
+            spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * materialSpecularColor * lightColor[i];
         }
     }
-
-    vec3 color = ambColor + kd * difColor + (1.0 - kd) * speColor;
-    vec3 material = getColor(vTruePosition);
+    vec3 color = amb_color + dif_color + spe_color;
+    vec3 material = getColor(vObjectSpacePosition);
     color = color * material;
     gl_FragColor = clamp(vec4(color, 1.), 0., 1.);
 }
