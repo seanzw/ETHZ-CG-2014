@@ -17,13 +17,14 @@ uniform vec3 globalAmbientLightColor;
 varying vec2 vTC;
 varying vec3 vN;
 varying vec4 vP;
+varying vec3 vUp;
 
 void main(void) {
     vec3 vNormal = normalize(vN);
     vec3 ambColor = globalAmbientLightColor * materialAmbientColor;
     vec3 vPosition = vP.xyz / vP.w;
     vec3 eye = normalize(-vPosition);
-    vec3 x = normalize(cross(vNormal, eye));
+    vec3 x = normalize(cross(vNormal, normalize(vUp)));
     vec3 y = cross(vNormal, x);
     vec3 difColor = vec3(0, 0, 0);
     vec3 speColor = vec3(0, 0, 0);
