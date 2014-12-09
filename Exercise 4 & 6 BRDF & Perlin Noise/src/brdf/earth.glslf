@@ -165,31 +165,33 @@ float bumpMapping(vec3 P) {
     return noise;
 }
 
-vec3 computeNormal(vec3 P, vec3 normal, vec3 tangent) {
-    float eps = 0.01;
+void computeNormal(vec3 P, inout vec3 normal, vec3 tangent) {
+    float eps = 0.5;
     vec3 bitangent = cross(normal, tangent);
     float b0 = bumpMapping(P);
     float b1 = bumpMapping(P + eps * tangent);
     float b2 = bumpMapping(P + eps * bitangent);
-    return normalize(normal + (b1 - b0) * bitangent + (b2 - b0) * tangent);
+    normal = normalize(normal + (b1 - b0) * bitangent + (b2 - b0) * tangent);
 }
 
-vec3 getColor(vec3 P, float currentTime, vec3 shift) {
+vec3 calculate(vec3 P, float currentTime, vec3 shift, inout vec3 normal, vec3 tangent) {
     // first get the earth color
-    vec3 earthColor = getEarthColor(P, vec3(100.)).xyz;
+    vec4 earthColor = getEarthColor(P, vec3(100.));
+    if (earthColor.w == 0.0) {
+        computeNormal(P, normal, tangent);
+    }
     float scale = 2.;
     vec3 v = vec3(0.3, 0.4, 0.05) * currentTime;
     vec3 temp = scale * P + shift + v;
     float noise = getPerlinNoise(temp, 0.5);
     noise = clamp(noise, 0.0, 1.0);
-    return mix(earthColor, cloudWhite, noise);
+    return mix(earthColor.xyz, cloudWhite, noise);
 }
 
 void main(void) {
-    vec3 material = getColor(vObjectSpacePosition, currentTime, vec3(100.));
     vec3 vNormal = normalize(vN);
     vec3 x = normalize(cross(vNormal, normalize(vUp)));
-    vNormal = computeNormal(vObjectSpacePosition, vNormal, x);
+    vec3 material = calculate(vObjectSpacePosition, currentTime, vec3(100.), vNormal, x);
     vec3 amb_color = globalAmbientLightColor * material;
     vec3 vPosition = vP.xyz / vP.w;
     vec3 eye = normalize(-vPosition);
