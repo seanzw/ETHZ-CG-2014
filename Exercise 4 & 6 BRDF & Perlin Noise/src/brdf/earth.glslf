@@ -24,10 +24,13 @@ varying vec3 vObjectSpacePosition;
 
 const float octave = 10.0;
 
+vec3 lightBlue      = vec3(0. / 255., 197. / 255., 225. / 255.);
 vec3 oceanBlue      = vec3(28. / 255., 107. / 255., 160. / 255.);
 vec3 forestGreen    = vec3(38. / 255., 106. / 255., 46. / 255.);
+vec3 lightGreen     = vec3(78. / 255., 225. / 255., 78. / 255.);
 vec3 cloudWhite     = vec3(243. / 255., 242. / 255., 231. / 255.);
 vec3 desertSand     = vec3(237. / 255., 201. / 255., 175. / 255.);
+vec3 gold           = vec3(225. / 255., 215. / 255., 0. / 255.);
 
 // function used to generate 3D Perlin noise
 vec3 mod289(vec3 x) {
@@ -130,24 +133,50 @@ float getPerlinNoise(vec3 P, float amp) {
     return n;
 }
 
-vec3 getEarthColor(vec3 P, vec3 shift) {
+float getSimplePerlinNoise(vec3 P, float amp) {
+    float n = 0.0;
+    float frequence = 1.0;
+    for (float i = 0.0; i < 5.0; ++i) {
+        n += amp * PerlinNoise(frequence * P);
+        frequence *= 2.0;
+        amp *= persistence;
+    }
+    return n;
+}
+
+vec4 getEarthColor(vec3 P, vec3 shift) {
     float scale = 1.0;
     vec3 temp = scale * P + shift;
-    float value = sqrt(P.x * P.y);
     float noise = (getPerlinNoise(temp, 1.));
     if (noise < 0.1) {
-        return oceanBlue;
+        return vec4(mix(oceanBlue, lightBlue, noise + 0.9), 1.0);
     } else if (noise < 0.2) {
-        return desertSand;
+        return vec4(mix(desertSand, gold, noise * 3.), 0.0);
     } else {
-        return forestGreen;
+        return vec4(mix(forestGreen, lightGreen, noise), 0.0);
     }
-    // return vec3(noise) * oceanBlue;
+}
+
+float bumpMapping(vec3 P) {
+    float scale = 1.0;
+    vec3 shift = vec3(100.0);
+    vec3 temp = scale * P + shift;
+    float noise = getSimplePerlinNoise(temp, 1.0);
+    return noise;
+}
+
+vec3 computeNormal(vec3 P, vec3 normal, vec3 tangent) {
+    float eps = 0.01;
+    vec3 bitangent = cross(normal, tangent);
+    float b0 = bumpMapping(P);
+    float b1 = bumpMapping(P + eps * tangent);
+    float b2 = bumpMapping(P + eps * bitangent);
+    return normalize(normal + (b1 - b0) * bitangent + (b2 - b0) * tangent);
 }
 
 vec3 getColor(vec3 P, float currentTime, vec3 shift) {
     // first get the earth color
-    vec3 earthColor = getEarthColor(P, vec3(100.));
+    vec3 earthColor = getEarthColor(P, vec3(100.)).xyz;
     float scale = 2.;
     vec3 v = vec3(0.3, 0.4, 0.05) * currentTime;
     vec3 temp = scale * P + shift + v;
@@ -160,7 +189,7 @@ void main(void) {
     vec3 material = getColor(vObjectSpacePosition, currentTime, vec3(100.));
     vec3 vNormal = normalize(vN);
     vec3 x = normalize(cross(vNormal, normalize(vUp)));
-    vec3 y = cross(vNormal, x);
+    vNormal = computeNormal(vObjectSpacePosition, vNormal, x);
     vec3 amb_color = globalAmbientLightColor * material;
     vec3 vPosition = vP.xyz / vP.w;
     vec3 eye = normalize(-vPosition);

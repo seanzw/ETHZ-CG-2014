@@ -269,7 +269,7 @@ function setCurrentTime() {
 	try {
 		var s = shaders[currentShader].program;
 		gl.uniform1f(s.currentTimeUniform, currentTime);
-		currentTime += 0.01;
+		currentTime += 0.1;
 	} catch(e) {}
 }
 
