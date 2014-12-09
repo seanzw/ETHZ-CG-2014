@@ -12,8 +12,11 @@ uniform vec3 lightColor[3];
 uniform vec3 globalAmbientLightColor;
 
 uniform float persistence;
-uniform float period;
+uniform float currentTime;
+uniform float frequence;
+uniform float noisePower;
 
+varying vec2 vTC;
 varying vec3 vN;
 varying vec4 vP;
 varying vec3 vUp;
@@ -21,8 +24,10 @@ varying vec3 vObjectSpacePosition;
 
 const float octave = 10.0;
 
-vec3 earlyWood = vec3(222./255., 184./255., 135./255.);
-vec3 tan     = vec3(139./255., 90./255., 43./255.);
+vec3 oceanBlue      = vec3(28. / 255., 107. / 255., 160. / 255.);
+vec3 forestGreen    = vec3(38. / 255., 106. / 255., 46. / 255.);
+vec3 cloudWhite     = vec3(243. / 255., 242. / 255., 231. / 255.);
+vec3 desertSand     = vec3(237. / 255., 201. / 255., 175. / 255.);
 
 // function used to generate 3D Perlin noise
 vec3 mod289(vec3 x) {
@@ -125,26 +130,37 @@ float getPerlinNoise(vec3 P, float amp) {
     return n;
 }
 
-vec3 getColor(vec3 P) {
-    float scale = 0.4;
-    float shift = 1000.0;
-    float x = scale * P.x + shift + 100000.0;
-    float y = scale * P.y + shift - 100000.0;
-    float z = scale * P.z + shift + .0;
-    float frequency = 1.0;
+vec3 getEarthColor(vec3 P, vec3 shift) {
+    float scale = 1.0;
+    vec3 temp = scale * P + shift;
+    float value = sqrt(P.x * P.y);
+    float noise = (getPerlinNoise(temp, 1.));
+    if (noise < 0.1) {
+        return oceanBlue;
+    } else if (noise < 0.2) {
+        return desertSand;
+    } else {
+        return forestGreen;
+    }
+    // return vec3(noise) * oceanBlue;
+}
 
-    float noise = getPerlinNoise((x + y)/8. + frequency * vec3(x + 10.2, y, z), 0.5);
-
-    noise = abs(cos(x/2. + sqrt(x*x + y*y*1.2 + 1.4 + z*z)*2.0 + noise + z*1. + y * 10. + x));
-    return mix(earlyWood, tan, noise);
+vec3 getColor(vec3 P, float currentTime, vec3 shift) {
+    // first get the earth color
+    vec3 earthColor = getEarthColor(P, vec3(100.));
+    float scale = 2.;
+    vec3 v = vec3(0.3, 0.4, 0.05) * currentTime;
+    vec3 temp = scale * P + shift + v;
+    float noise = getPerlinNoise(temp, 0.5);
+    noise = clamp(noise, 0.0, 1.0);
+    return mix(earthColor, cloudWhite, noise);
 }
 
 void main(void) {
-    vec3 material = getColor(vObjectSpacePosition);
+    vec3 material = getColor(vObjectSpacePosition, currentTime, vec3(100.));
     vec3 vNormal = normalize(vN);
     vec3 x = normalize(cross(vNormal, normalize(vUp)));
     vec3 y = cross(vNormal, x);
-    // vNormal = getNormal(vNormal, x, y, vObjectSpacePosition);
     vec3 amb_color = globalAmbientLightColor * material;
     vec3 vPosition = vP.xyz / vP.w;
     vec3 eye = normalize(-vPosition);
@@ -156,7 +172,7 @@ void main(void) {
         vec3 toLight = normalize(lightP);
         float c = dot(toLight, vNormal);
         if (c > 0.) {
-            dif_color = dif_color + attenuation * c * lightColor[i] * material;
+            dif_color = dif_color + attenuation * c * material * lightColor[i];
             vec3 R = reflect(-toLight, vNormal);
             spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * materialSpecularColor * lightColor[i];
         }

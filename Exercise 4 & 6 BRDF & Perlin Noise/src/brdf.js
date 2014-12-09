@@ -13,14 +13,16 @@ var showTeapot = true;
 
 var showCode = false;
 
+var currentTime = 0.0;
+
 // 3 point light sources
 var lights = new Array();
 lights.push({position: new Float32Array([10, 10, 10]), color: new Float32Array([1, 1, 1])});
 // lights.push({position: new Float32Array([10, 10, 10]), color: new Float32Array([0, 0, 0])});
 // lights.push({position: new Float32Array([10, 10, 10]), color: new Float32Array([0, 0, 0])});
 
-lights.push({position: new Float32Array([-10, -10, 2]), color: new Float32Array([1, 0.5, 0.5])});
-lights.push({position: new Float32Array([-2, 5, -10]), color: new Float32Array([0.5, 1, 0.5])});
+lights.push({position: new Float32Array([-10, -10, 2]), color: new Float32Array([1, 1, 1])});
+lights.push({position: new Float32Array([-2, 5, -10]), color: new Float32Array([1, 1, 1])});
 
 // global ambient light
 var global_ambient = new Float32Array([0.2, 0.2, 0.2]);
@@ -263,6 +265,14 @@ function setLights() {
 	} catch(e) {}
 }
 
+function setCurrentTime() {
+	try {
+		var s = shaders[currentShader].program;
+		gl.uniform1f(s.currentTimeUniform, currentTime);
+		currentTime += 0.01;
+	} catch(e) {}
+}
+
 function switchShader(newShaderIndex) {
 	if (	newShaderIndex >= 0 &&
 			newShaderIndex < shaders.length &&
@@ -387,6 +397,8 @@ function locateAttribsAndUniforms(shaderName, shaderProgram) {
 	shaderProgram.diffuseColorUniform = gl.getUniformLocation(shaderProgram, "materialDiffuseColor");
 	shaderProgram.specularColorUniform = gl.getUniformLocation(shaderProgram, "materialSpecularColor");
 
+	shaderProgram.currentTimeUniform = gl.getUniformLocation(shaderProgram, "currentTime");
+
 	// get uniform locations for lights
 	shaderProgram.pointLightingLocationUniform = new Array();
 	shaderProgram.pointLightingColorUniform = new Array();
@@ -441,6 +453,7 @@ function display() {
 
 	setMaterialProperties();
 	setLights();
+	setCurrentTime();
 
 	// make two objects look in a similar scale
 	if (showTeapot) mat4.scale(mvMatrix, [0.2, 0.2, 0.2]);

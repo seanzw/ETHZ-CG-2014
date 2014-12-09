@@ -21,7 +21,6 @@ varying vec3 vObjectSpacePosition;
 
 const float octave = 10.0;
 
-
 // function used to generate 3D Perlin noise
 vec3 mod289(vec3 x) {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -131,14 +130,14 @@ vec3 getColor(vec3 P) {
     }
 
     noise = abs(cos(sqrt(x * z) + offset * noise));
-
     return vec3(noise, noise, noise);
 }
 
 
 void main(void) {
+    vec3 material = getColor(vObjectSpacePosition);
     vec3 vNormal = normalize(vN);
-    vec3 amb_color = globalAmbientLightColor * materialAmbientColor;
+    vec3 amb_color = globalAmbientLightColor * materialAmbientColor * material;
     vec3 vPosition = vP.xyz / vP.w;
     vec3 eye = normalize(-vPosition);
     vec3 dif_color = vec3(0, 0, 0);
@@ -151,11 +150,10 @@ void main(void) {
         if (c > 0.) {
             dif_color = dif_color + attenuation * c * materialDiffuseColor * lightColor[i];
             vec3 R = reflect(-toLight, vNormal);
-            spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * materialSpecularColor * lightColor[i];
+            spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * materialSpecularColor * material * lightColor[i];
         }
     }
     vec3 color = amb_color + dif_color + spe_color;
-    vec3 material = getColor(vObjectSpacePosition);
-    color = color * material;
+    
     gl_FragColor = clamp(vec4(color, 1.), 0., 1.);
 }
