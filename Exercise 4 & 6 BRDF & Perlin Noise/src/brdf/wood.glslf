@@ -12,6 +12,7 @@ uniform vec3 lightColor[3];
 uniform vec3 globalAmbientLightColor;
 
 uniform float persistence;
+uniform float noiseFrequency;
 uniform float period;
 uniform float noisePower;
 
@@ -129,17 +130,10 @@ float getPerlinNoise(vec3 P, float amp) {
 }
 
 void getBand(vec3 P, out vec3 diffuse, out vec3 specular) {
-    float scale = 0.4;
-    float shift = 1000.0;
-    float x = scale * P.x + shift + 100000.0;
-    float y = scale * P.y + shift - 100000.0;
-    float z = scale * P.z + shift + .0;
-    float frequency = 1.0;
 
-    float noise = getPerlinNoise((x + y)/8. + frequency * vec3(x + 10.2, y, z), 0.5);
+    float noise = getPerlinNoise(noiseFrequency * P, 0.5);
 
-    // noise = abs(cos(x/2. + sqrt(x*x + y*y*1.2 + 1.4 + z*z)*2.0 + noise + z*1. + y * 10. + x));
-    noise = abs(cos(period * length(vec3(P.yz, 0.0)) + noisePower * noise));
+    noise = abs(cos(period * length(P * vec3(0.0, 0.5, 1.0)) + noisePower * noise));
     diffuse = mix(diffuseLo, diffuseHi, noise);
     specular = mix(specularLo, specularHi, noise);
 }
