@@ -13,6 +13,7 @@ uniform vec3 globalAmbientLightColor;
 
 uniform float persistence;
 uniform float period;
+uniform float noisePower;
 
 varying vec3 vN;
 varying vec4 vP;
@@ -21,8 +22,10 @@ varying vec3 vObjectSpacePosition;
 
 const float octave = 10.0;
 
-vec3 earlyWood = vec3(222./255., 184./255., 135./255.);
-vec3 tan     = vec3(139./255., 90./255., 43./255.);
+vec3 diffuseLo  = vec3(0.35, 0.177, 0.07);
+vec3 diffuseHi  = vec3(0.80, 0.30, 0.10);
+vec3 specularLo = vec3(0.3);
+vec3 specularHi = vec3(1.0);
 
 // function used to generate 3D Perlin noise
 vec3 mod289(vec3 x) {
@@ -125,7 +128,7 @@ float getPerlinNoise(vec3 P, float amp) {
     return n;
 }
 
-vec3 getColor(vec3 P) {
+void getBand(vec3 P, out vec3 diffuse, out vec3 specular) {
     float scale = 0.4;
     float shift = 1000.0;
     float x = scale * P.x + shift + 100000.0;
@@ -135,17 +138,19 @@ vec3 getColor(vec3 P) {
 
     float noise = getPerlinNoise((x + y)/8. + frequency * vec3(x + 10.2, y, z), 0.5);
 
-    noise = abs(cos(x/2. + sqrt(x*x + y*y*1.2 + 1.4 + z*z)*2.0 + noise + z*1. + y * 10. + x));
-    return mix(earlyWood, tan, noise);
+    // noise = abs(cos(x/2. + sqrt(x*x + y*y*1.2 + 1.4 + z*z)*2.0 + noise + z*1. + y * 10. + x));
+    noise = abs(cos(period * length(vec3(P.yz, 0.0)) + noisePower * noise));
+    diffuse = mix(diffuseLo, diffuseHi, noise);
+    specular = mix(specularLo, specularHi, noise);
 }
 
 void main(void) {
-    vec3 material = getColor(vObjectSpacePosition);
+    vec3 diffuse, specular;
+    getBand(vObjectSpacePosition, diffuse, specular);
     vec3 vNormal = normalize(vN);
     vec3 x = normalize(cross(vNormal, normalize(vUp)));
     vec3 y = cross(vNormal, x);
-    // vNormal = getNormal(vNormal, x, y, vObjectSpacePosition);
-    vec3 amb_color = globalAmbientLightColor * material;
+    vec3 amb_color = globalAmbientLightColor * diffuseLo;
     vec3 vPosition = vP.xyz / vP.w;
     vec3 eye = normalize(-vPosition);
     vec3 dif_color = vec3(0, 0, 0);
@@ -156,9 +161,9 @@ void main(void) {
         vec3 toLight = normalize(lightP);
         float c = dot(toLight, vNormal);
         if (c > 0.) {
-            dif_color = dif_color + attenuation * c * lightColor[i] * material;
+            dif_color = dif_color + attenuation * c * lightColor[i] * diffuse;
             vec3 R = reflect(-toLight, vNormal);
-            spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * materialSpecularColor * lightColor[i];
+            spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * specular * lightColor[i];
         }
     }
     vec3 color = amb_color + dif_color + spe_color;
