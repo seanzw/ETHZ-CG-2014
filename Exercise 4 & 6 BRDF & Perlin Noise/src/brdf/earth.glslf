@@ -24,8 +24,8 @@ varying vec3 vObjectSpacePosition;
 
 const float octave = 10.0;
 
-vec3 lightBlue      = vec3(0. / 255., 197. / 255., 225. / 255.);
-vec3 oceanBlue      = vec3(28. / 255., 107. / 255., 160. / 255.);
+vec3 lightBlue      = vec3(0. / 255., 0. / 255., 205. / 255.);
+vec3 oceanBlue      = vec3(0. / 255., 0. / 255., 128. / 255.);
 vec3 forestGreen    = vec3(38. / 255., 106. / 255., 46. / 255.);
 vec3 lightGreen     = vec3(78. / 255., 225. / 255., 78. / 255.);
 vec3 cloudWhite     = vec3(243. / 255., 242. / 255., 231. / 255.);
