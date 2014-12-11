@@ -22,49 +22,40 @@ varying vec3 vUp;
 varying vec3 vObjectSpacePosition;
 
 const float octave = 10.0;
+const float PI = 3.14159;
 
 vec3 diffuseLo  = vec3(0.35, 0.177, 0.07);
 vec3 diffuseHi  = vec3(0.80, 0.30, 0.10);
 vec3 specularLo = vec3(0.3);
 vec3 specularHi = vec3(1.0);
 
-vec4 mod256(vec4 x) {
-    return fract(x * (1.0 / 256.0)) * 256.0;
+vec4 mod289(vec4 x) {
+    return fract(x * (1.0 / 289.0)) * 289.0;
 }
 
 vec4 permute(vec4 x) {
-    return mod256((34.0 * x + 1.0) + x);
-}
-
-vec4 taylorInvSqrt(vec4 r) {
-    return 1.79284291400159 - 0.85373472095314 * r;
+    return mod289((34.0 * x + 1.0) + x);
 }
 
 vec3 interpolate(vec3 t) {
     return t*t*t*(t*(t*6.0-15.0)+10.0);
 }
 
-float getStep(float x) {
-    float t0 = step(x, 1.0 / 3.0);
-    float t1 = fract(x * 3.0);
-    float t2 = 2.0 * step(t1, 0.5) - 1.0;
-    float t3 = fract(t1 * 2.0);
-    float t4 = 2.0 * step(t3, 0.5) - 1.0;
-    float t5 = 1.0 - step(x, 2.0 / 3.0);
-    float t6 = t5 + t4 - t5 * t4;
-    return t0 * t2 * t6;
-}
-
-
-// @index: each component represent one index after permuation
-// @fraction: the difference between P and vertice Q, i.e. P - Q
-// @return: the gradient vector
-// use getStep to generate the gradient
-vec3 getGradient(float index) {
-    float x = fract(index * (1.0 / 12.0));
-    float y = fract(x + 1.0 / 3.0);
-    float z = fract(y + 1.0 / 3.0);
-    return vec3(getStep(x), getStep(y), getStep(z));
+// @index: each component is an index after permutation
+// @g: the gradient vector coresponding to the index
+// just sample over the unit sphere, therefore no need to normalize
+void getGradientSphere3D(vec4 index, out vec3 g00, out vec3 g01, out vec3 g10, out vec3 g11) {
+    vec4 temp = fract(index * (1.0 / 17.0));
+    vec4 theta =  2.0 * PI * temp;
+    vec4 phi = 2.0 * PI * fract(temp * 17.0);
+    vec4 zTemp = cos(theta);
+    vec4 sTemp = sin(theta);
+    vec4 xTemp = sTemp * cos(phi);
+    vec4 yTemp = sTemp * sin(phi);
+    g00 = vec3(xTemp.x, yTemp.x, zTemp.x);
+    g01 = vec3(xTemp.y, yTemp.y, zTemp.y);
+    g10 = vec3(xTemp.z, yTemp.z, zTemp.z);
+    g11 = vec3(xTemp.w, yTemp.w, zTemp.w);
 }
 
 float PerlinNoise3D(vec3 P) {
@@ -75,16 +66,6 @@ float PerlinNoise3D(vec3 P) {
     vec3 Pf0 = fract(P);
     vec3 Pf1 = Pf0 - vec3(1.0);
 
-    // vector used in permuation
-    // index = x + permute(y + permute(z));
-    // 000
-    // 001
-    // 010
-    // 011
-    // 100
-    // 101
-    // 110
-    // 111
     vec4 permuteX0  = vec4(Pi0.xxxx);
     vec4 permuteX1  = vec4(Pi1.xxxx);
     vec4 permuteY   = vec4(Pi0.yy, Pi1.yy);
@@ -95,28 +76,9 @@ float PerlinNoise3D(vec3 P) {
     vec4 index0 = permute(permuteX0 + permuteT);
     vec4 index1 = permute(permuteX1 + permuteT);
 
-    // get the gradient
-    // since all the gradients have length sqrt(2), we can normalize it in the end
-    vec3 g000 = getGradient(index0.x);
-    vec3 g001 = getGradient(index0.y);
-    vec3 g010 = getGradient(index0.z);
-    vec3 g011 = getGradient(index0.w);
-    vec3 g100 = getGradient(index1.x);
-    vec3 g101 = getGradient(index1.y);
-    vec3 g110 = getGradient(index1.z);
-    vec3 g111 = getGradient(index1.w);
-
-    // // normalize the gradient
-    // vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));
-    // g000 *= norm0.x;
-    // g010 *= norm0.y;
-    // g100 *= norm0.z;
-    // g110 *= norm0.w;
-    // vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));
-    // g001 *= norm1.x;
-    // g011 *= norm1.y;
-    // g101 *= norm1.z;
-    // g111 *= norm1.w;
+    vec3 g000, g001, g010, g011, g100, g101, g110, g111;
+    getGradientSphere3D(index0, g000, g001, g010, g011);
+    getGradientSphere3D(index0, g100, g101, g110, g111);
 
     // projection
     float n000 = dot(g000, Pf0);
@@ -134,10 +96,10 @@ float PerlinNoise3D(vec3 P) {
     vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);
     float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);
 
-    return n_xyz * (1.0 / 1.414);
+    return n_xyz;
 }
 
-float getPerlinNoise3D(vec3 P, float amp) {
+float terbulance3D(vec3 P, float amp) {
     float n = 0.0;
     float frequence = 1.0;
     for (float i = 0.0; i < octave; ++i) {
@@ -150,8 +112,7 @@ float getPerlinNoise3D(vec3 P, float amp) {
 
 void getBand(vec3 P, out vec3 diffuse, out vec3 specular) {
 
-    float noise = getPerlinNoise3D(noiseFrequency * P, 0.5);
-
+    float noise = terbulance3D(noiseFrequency * P, 0.5);
     noise = abs(cos(period * length(P * vec3(0.0, 0.5, 1.0)) + noisePower * noise));
     diffuse = mix(diffuseLo, diffuseHi, noise);
     specular = mix(specularLo, specularHi, noise);
