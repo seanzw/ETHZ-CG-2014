@@ -24,3 +24,9 @@ For Hematite the IOR is 2.9. The both Beckmann distribution is set to 0.2. Kd eq
 
 ### Spatially Varying BRDF
 I tried to use perlin noise but still can't figure out how to generate the rusty steel. Here I just generate some weird marble texture. The generator of perlin noise comes from [here](https://github.com/ashima/webgl-noise)
+
+### Wood
+Apply 3D Perlin noise to get a wood texture.
+
+### Marble
+Apply 3D Perlin noise to get a marble texture.
