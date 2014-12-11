@@ -298,8 +298,8 @@ float computeClouds() {
     vec4 shift = vec4(0.0);
 
     float noise = getPerlinNoise(vec4(vObjectSpacePosition, currentTime), scale, shift, amplitude, frequency, persistence);
-    if (noise > 0.5) {
-        return 2.0 * (noise - 0.5);
+    if (noise > 0.0) {
+        return clamp(noise, 0.0, 1.0);
     }
     return 0.0;
 }
@@ -391,8 +391,8 @@ void main(void) {
     bool is_ocean = (surfaceColor.w == 0.0);
 
 
-    // if (!is_ocean && !cloudNoise > 0)
-    //     vNormal = computeEarthNormals(vNormal, surfaceColor.w, cloudColor.w);
+    if (!is_ocean && cloudNoise == 0.0)
+        vNormal = computeEarthNormals(vNormal, surfaceColor.w, cloudNoise);
 
     vec3 material = mix(surfaceColor.xyz, cloudWhite, cloudNoise);
 
