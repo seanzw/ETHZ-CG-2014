@@ -158,7 +158,7 @@ void main(void) {
         if (c > 0.) {
             dif_color = dif_color + attenuation * c * material * lightColor[i];
             vec3 R = reflect(-toLight, vNormal);
-            spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * material * lightColor[i];
+            spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * lightColor[i];
         }
     }
     vec3 color = amb_color + dif_color + spe_color;

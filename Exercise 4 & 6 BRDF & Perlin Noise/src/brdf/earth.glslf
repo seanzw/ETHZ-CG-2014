@@ -13,7 +13,6 @@ uniform vec3 globalAmbientLightColor;
 
 uniform float persistenceEarth;
 uniform float currentTime;
-uniform float frequence;
 uniform float noisePower;
 
 varying vec2 vTC;
@@ -24,18 +23,15 @@ varying vec3 vObjectSpacePosition;
 
 const float octave = 5.0;
 
-vec3 lightBlue      = vec3(0. / 255., 0. / 255., 205. / 255.);
-vec3 oceanBlue      = vec3(0. / 255., 0. / 255., 128. / 255.);
-vec3 forestGreen    = vec3(38. / 255., 106. / 255., 46. / 255.);
-vec3 lightGreen     = vec3(78. / 255., 225. / 255., 78. / 255.);
-vec3 cloudWhite     = vec3(243. / 255., 242. / 255., 231. / 255.);
-vec3 desertSand     = vec3(237. / 255., 201. / 255., 175. / 255.);
-vec3 gold           = vec3(225. / 255., 215. / 255., 0. / 255.);
-vec3 earthBrown     = vec3(161. / 255., 64. / 255., 43. / 255.);
-vec3 earthYellow    = vec3(225. / 255., 169. / 255., 95. / 255.);
-
-vec3 color_dark = vec3(71.0/255.0, 64.0/255.0, 51.0/255.0);
-vec3 color_bright = vec3(242.0/255.0, 242.0/255.0, 252.0/255.0);
+// vec3 lightBlue      = vec3(0. / 255., 0. / 255., 205. / 255.);
+// vec3 oceanBlue      = vec3(0. / 255., 0. / 255., 128. / 255.);
+// vec3 forestGreen    = vec3(38. / 255., 106. / 255., 46. / 255.);
+// vec3 lightGreen     = vec3(78. / 255., 225. / 255., 78. / 255.);
+// vec3 cloudWhite     = vec3(243. / 255., 242. / 255., 231. / 255.);
+// vec3 desertSand     = vec3(237. / 255., 201. / 255., 175. / 255.);
+// vec3 gold           = vec3(225. / 255., 215. / 255., 0. / 255.);
+// vec3 earthBrown     = vec3(161. / 255., 64. / 255., 43. / 255.);
+// vec3 earthYellow    = vec3(225. / 255., 169. / 255., 95. / 255.);
 
 vec3 color_light_blue = vec3(35.0/255.0, 45.0/255.0, 100.0/255.0);
 vec3 color_dark_blue = vec3(27.0/255.0, 38.0/255.0, 74.0/255.0);
@@ -66,7 +62,7 @@ vec3 fade(vec3 t) {
     return t*t*t*(t*(t*6.0-15.0)+10.0);
 }
 
-float PerlinNoise(vec3 P)
+float PerlinNoise3D(vec3 P)
 {
     vec3 Pi0 = floor(P); // Integer part for indexing
     vec3 Pi1 = Pi0 + vec3(1.0); // Integer part + 1
@@ -135,108 +131,78 @@ float PerlinNoise(vec3 P)
     return 2.2 * n_xyz;
 }
 
-float getPerlinNoise(vec3 P, float amp, float persistence) {
+float getPerlinNoise3D(vec3 P, vec3 scale, vec3 shift, float amp, float frequency, float persistence) {
+    vec3 t = scale * P + shift;
     float n = 0.0;
-    float frequence = 1.0;
     for (float i = 0.0; i < octave; ++i) {
-        n += amp * PerlinNoise(frequence * P);
-        frequence *= 2.0;
+        n += amp * PerlinNoise3D(frequency * t);
+        frequency *= 2.0;
         amp *= persistence;
     }
     return n;
 }
 
-
-
-vec4 computeClouds(vec3 v) {
-    float p = 0.0;
+vec4 computeClouds(vec3 shift) {
     float amplitude = 2.0;
-    float frequency = 01.75;
-    float scale = 0.75*(1.0);
-    float shift = 0.0;
-    float x = scale * vObjectSpacePosition.x + shift + v.x;
-    float y = scale * vObjectSpacePosition.y + shift + v.y;
-    float z = scale * vObjectSpacePosition.z + shift + v.z;
+    float frequency = 1.75;
+    float persistence = 0.5;
+    vec3 scale = vec3(0.75);
 
-    for (int i = 0; i < 6; i++) {
-        p += amplitude * (PerlinNoise (frequency * vec3(x,y,z)));
-        frequency *= 2.0;
-        amplitude *= 0.5;
+    float noise = getPerlinNoise3D(vObjectSpacePosition, scale, shift, amplitude, frequency, persistence);
+    if (noise > 0.0) {
+        return vec4(color_grey * noise, noise);
     }
-
-    if (p > 0.0)
-        return vec4(color_grey * p, p);
-
     return vec4(0.0, 0.0, 0.0, 0.0);
 }
 
 vec3 computeLand() {
-    float p = 0.0;
     float amplitude = 1.5;
     float frequency = 0.5;
-    float scale = 10.0*(1.0);
-    float shift = 0.0;
-    float x = scale * vObjectSpacePosition.x + shift;
-    float y = scale * vObjectSpacePosition.y + shift;
-    float z = scale * vObjectSpacePosition.z + shift;
+    float persistence = 0.75;
+    vec3 scale = vec3(10.0);
+    vec3 shift = vec3(0.0);
 
-    for (int i = 0; i < 5; i++) {
-        p += amplitude * PerlinNoise(frequency * vec3(x,y,z));
-        frequency *= 2.0;
-        amplitude *= 0.75;
-    }
+    float noise = getPerlinNoise3D(vObjectSpacePosition, scale, shift, amplitude, frequency, persistence);
 
     //dessert
-    if (p < 0.0)
-        return mix(color_sand, color_green, p);
-
+    if (noise < 0.0) {
+        return mix(color_sand, color_green, noise);
+    }
     // forrest
-    return mix(color_green, color_darkgreen, p);
+    return mix(color_green, color_darkgreen, noise);
 }
 
 vec4 getSurfaceColor() {
-    float p = 0.0;
     float amplitude = 2.0;
     float frequency = 2.0;
-    float scale = 0.5*(1.0);
-    float shift = 0.0;
-    float x = scale * vObjectSpacePosition.x + shift;
-    float y = scale * vObjectSpacePosition.y + shift;
-    float z = scale * vObjectSpacePosition.z + shift;
+    float persistence = 0.55;
+    vec3 scale = vec3(0.5);
+    vec3 shift = vec3(0.0);
 
-    for (int i = 0; i < 12; i++) {
-        p += amplitude * PerlinNoise(frequency * vec3(x,y,z));
-        frequency *= 2.0;
-        amplitude *= 0.55;
-    }
+    float noise = getPerlinNoise3D(vObjectSpacePosition, scale, shift, amplitude, frequency, persistence);
 
     // water
-    if (p < 0.5)
-        return vec4 (mix (color_dark_blue, color_light_blue, p+5.0), 0.0);
+    if (noise < 0.5) {
+        return vec4(mix(color_dark_blue, color_light_blue, noise + 5.0), 0.0);
+    }
 
     // beach
-    if (p < 0.8)
-        return vec4 (mix (color_sand, color_green, p), p);
-
+    if (noise < 0.8) {
+        return vec4(mix(color_sand, color_green, noise), noise);
+    }
     // land
-    return vec4 (computeLand(), p);
+    return vec4 (computeLand(), noise);
 }
 
 float bumpMapping(vec3 shift) {
-    float p = 0.0;
     float amplitude = 1.5;
     float frequency = 0.5;
-    float scale = 1.0*(1.0);
-    float x = shift.x + vObjectSpacePosition.x * scale;
-    float y = shift.y + vObjectSpacePosition.y * scale;
-    float z = shift.z + vObjectSpacePosition.z * scale;
+    float persistence = 0.75;
+    vec3 scale = vec3(1.0);
 
-    for (int i = 0; i < 8; i++) {
-        p += amplitude * (PerlinNoise(frequency * vec3(x,y,z)));
-        frequency *= 2.0;
-        amplitude *= 0.5;
-    }
-    return p;
+    float noise = getPerlinNoise3D(vObjectSpacePosition, scale, shift, amplitude, frequency, persistence);
+
+    return noise;
 }
 
 vec3 computeEarthNormals(vec3 N, float height, float cloudiness) {
@@ -265,54 +231,9 @@ vec3 computeEarthNormals(vec3 N, float height, float cloudiness) {
 
 vec3 step = vec3(0.2, 0.4, 0.78)*2.0;
 
-// vec4 getEarthColor(vec3 P, vec3 shift) {
-//     float scale = 1.0;
-//     vec3 temp = scale * P + shift;
-//     float noise = (getPerlinNoise(temp, 1.0, persistenceEarth));
-//     if (noise < 0.1) {
-//         return vec4(mix(oceanBlue, lightBlue, noise + 0.9), 1.0);
-//     } else if (noise < 0.2) {
-//         return vec4(mix(earthYellow, desertSand, noise * 3.), 0.0);
-//     } else {
-//         return vec4(mix(desertSand, earthBrown, noise), 0.0);
-//     }
-// }
-
-// float bumpMapping(vec3 P) {
-//     float scale = 2.0;
-//     vec3 shift = vec3(100.0);
-//     vec3 temp = scale * P + shift;
-//     float noise = cos(getPerlinNoise(temp, 1.0, persistenceEarth));
-//     return noise;
-// }
-
-// void computeNormal(vec3 P, inout vec3 normal, vec3 tangent) {
-//     float eps = 0.5;
-//     vec3 bitangent = cross(normal, tangent);
-//     float b0 = bumpMapping(P);
-//     float b1 = bumpMapping(P + eps * tangent);
-//     float b2 = bumpMapping(P + eps * bitangent);
-//     normal = normalize(normal + (b1 - b0) * bitangent + (b2 - b0) * tangent);
-// }
-
-// vec3 calculate(vec3 P, float currentTime, vec3 shift, inout vec3 normal, vec3 tangent) {
-//     // first get the earth color
-//     vec4 earthColor = getEarthColor(P, vec3(100.));
-//     if (earthColor.w == 0.0) {
-//         computeNormal(P, normal, tangent);
-//     }
-//     float scale = 2.;
-//     vec3 v = vec3(0.3, 0.4, 0.05) * currentTime;
-//     vec3 temp = scale * P + shift + v;
-//     float noise = getPerlinNoise(temp, 0.5, 0.5);
-//     noise = clamp(noise, 0.0, 1.0);
-//     return mix(earthColor.xyz, cloudWhite, noise);
-// }
-
 void main(void) {
     vec3 vNormal = normalize(vN);
     vec3 x = normalize(cross(vNormal, normalize(vUp)));
-    // vec3 material = calculate(vObjectSpacePosition, currentTime, vec3(100.), vNormal, x);
 
     vec4 cloudColor = clamp(computeClouds(step*currentTime)*1.5, 0.0, 1.0);
     bool is_cloud = (cloudColor.w > 0.0);
@@ -321,8 +242,8 @@ void main(void) {
     bool is_ocean = (surfaceColor.w == 0.0);
 
 
-    if (!is_ocean && !is_cloud)
-        vNormal = computeEarthNormals(vNormal, surfaceColor.w, cloudColor.w);
+    // if (!is_ocean && !is_cloud)
+    //     vNormal = computeEarthNormals(vNormal, surfaceColor.w, cloudColor.w);
 
     vec3 amb_color = globalAmbientLightColor * (cloudColor.xyz + surfaceColor.xyz);
     vec3 vPosition = vP.xyz / vP.w;
@@ -337,7 +258,7 @@ void main(void) {
         if (c > 0.) {
             dif_color = dif_color + attenuation * c * lightColor[i];
             vec3 R = reflect(-toLight, vNormal);
-            spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * lightColor[i];
+            // spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * lightColor[i];
 
         }
     }
