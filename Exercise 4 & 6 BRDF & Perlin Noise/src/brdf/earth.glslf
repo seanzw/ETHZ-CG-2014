@@ -356,11 +356,10 @@ float bumpMapping(vec3 shift) {
 }
 
 vec3 computeEarthNormals(vec3 N, float height, float cloudiness) {
-    float eps = 1.0;
-    float scale = 20.0;
-    float aX = bumpMapping(vec3(eps, 0.0, 0.0)) * scale;
-    float aY = bumpMapping(vec3(0.0, eps, 0.0)) * scale;
-    float aZ = bumpMapping(vec3(0.0, 0.0, eps)) * scale;
+    float eps = 0.5;
+    float aX = bumpMapping(vec3(eps, 0.0, 0.0));
+    float aY = bumpMapping(vec3(0.0, eps, 0.0));
+    float aZ = bumpMapping(vec3(0.0, 0.0, eps));
     
     mat3 rotX = mat3(1., 0., 0.,
                      0., cos(aX), -sin(aX),
@@ -391,7 +390,7 @@ void main(void) {
     bool is_ocean = (surfaceColor.w == 0.0);
 
 
-    if (!is_ocean && cloudNoise == 0.0)
+    if (!is_ocean)
         vNormal = computeEarthNormals(vNormal, surfaceColor.w, cloudNoise);
 
     vec3 material = mix(surfaceColor.xyz, cloudWhite, cloudNoise);
@@ -401,16 +400,18 @@ void main(void) {
     vec3 eye = normalize(-vPosition);
     vec3 dif_color = vec3(0, 0, 0);
     vec3 spe_color = vec3(0, 0, 0);
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 1; ++i) {
         vec3 lightP = lightPosition[i] - vPosition;
         float attenuation = intensity / length(lightP);
         vec3 toLight = normalize(lightP);
         float c = dot(toLight, vNormal);
         if (c > 0.) {
-            dif_color = dif_color + attenuation * c * lightColor[i];
+            dif_color = dif_color + attenuation * c * material * lightColor[i];
             vec3 R = reflect(-toLight, vNormal);
             spe_color = spe_color + attenuation * (pow(max(dot(R, eye), 0.), materialSpecularPower)) * lightColor[i];
-
+            if (!is_ocean) {
+                spe_color = 0.25 * spe_color;
+            }
         }
     }
     vec3 color = amb_color + dif_color + spe_color;

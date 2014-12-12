@@ -257,6 +257,14 @@ function setLights() {
 			// transform the light positions according to the current model-view matrix
 			// so that the lights are not fixed with the eyes position.
 			var pos = new Float32Array(lights[i].position);
+			var omega = 10;
+			var sine = Math.sin(omega * currentTime);
+			var cosine = Math.cos(omega * currentTime);
+			var rot = quat4.create([0, 0, sine, cosine]);
+			var rotM = mat4.create();
+			quat4.toMat4(rot, rotM);
+			mat4.transpose(rotM);
+			mat4.multiplyVec3(rotM, pos);
 			mat4.multiplyVec3(mvMatrix, pos);
 			gl.uniform3fv(s.pointLightingLocationUniform[i], pos);
 			gl.uniform3fv(s.pointLightingColorUniform[i], lights[i].color);
@@ -733,4 +741,3 @@ window.requestAnimFrame = (function() {
 		window.setTimeout(callback, 1000/60);
 	};
 })();
-
