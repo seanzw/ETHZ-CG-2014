@@ -32,4 +32,4 @@ Apply 3D Perlin noise to get a wood texture.
 Apply 3D Perlin noise to get a marble texture.
 
 ### Earth
-Use 4D Perlin noise to animate the cloud. Still can not get rid of the plastic feel.
+Use 4D Perlin noise to animate the cloud. And 3D Perlin noise to generate the surface.
