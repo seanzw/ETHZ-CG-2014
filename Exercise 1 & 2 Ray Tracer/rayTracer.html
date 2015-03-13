@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale = 1 user-scalable=no" />
+	<meta name = "viewport" content = "height = device-height, initial-scale = 1 user-scalable=no" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<link rel="stylesheet" type="text/css" href= "./css/menu.css" />
+
+	<title>hello, hsienyu - lab-Computer-Graphics</title>
+
+	<!-- read the list of module enabled (for example you can use in your code: "if(ModuleId.B3) { ... }") -->
+	<script src="./ModuleId.js"></script>
+	
+	<!-- self-contained library for 3D vector -->
+	
+
+	<!-- TGA and OBJ loader for exercise 3 -->
+	<script type="text/javascript">
+		var waitingForData = 0; // # of asynchronous loading requests in progress (renderer will wait for them to be done)
+	</script>
+	
+	<!-- DO NOT change the code BEFORE this point unless you know what you are doing -->
+	
+	<!-- you can include additional script files here if you need -->
+	
+	<!-- <script src="./src/Ray.js"></script> -->
+	<!-- <script src="./src/Camera.js"></script> -->
+	
+	<script src="./src/rayIntersectCounter.src.js"></script>
+	<script src="./src/octree.src.js"></script>
+	<script src="./src/targa.src.js"></script>
+	<script src="./src/vector.src.js"></script>
+	<script src="./src/vector4.src.js"></script>
+	<script src="./src/matrix4.src.js"></script>
+	<script src="./src/material.src.js"></script>
+	<script src="./src/sphere.src.js"></script>
+	<script src="./src/box.src.js"></script>
+	<script src="./src/ellipsoid.src.js"></script>
+	<script src="./src/cylinder.src.js"></script>
+	<script src="./src/conic.src.js"></script>
+	<script src="./src/intersect.src.js"></script>
+	<script src="./src/mesh.src.js"></script>
+	<script src="./src/objects.src.js"></script>
+	<script src="./src/camera.src.js"></script>
+	<script src="./src/pointLight.src.js"></script>
+	<script src="./src/arealight.src.js"></script>
+	<script src="./src/scene.src.js"></script>
+	<script src="./src/raytracer.js"></script>
+	
+	<!-- ... -->
+
+		
+	<!-- DO NOT change the code AFTER this point unless you know what you are doing -->
+	<script type="text/javascript">
+				
+		var width = 800, height = 600; // image size
+		var canv, ctx, imgData; // canvas
+		var imgBuffer; // canvas buffer
+		var pixBuffer; // color pixel buffer
+		
+		var curPixelX = 0, curPixelY = 0; // current pixel to render
+		
+		// initialization when page loads
+		function load() {
+			canv = document.getElementById("myCanvas");
+			ctx = canv.getContext("2d");
+			imgData = ctx.createImageData(width,height);
+			imgBuffer = imgData.data;
+			pixBuffer = new Array();
+			
+			canv.onclick = function(e) {
+				debugPixel(e.layerX,e.layerY);
+			}
+			
+			startRendering(); // render the scene
+		}
+		
+		// launch the renderer
+		function startRendering() {
+			clearBuffer(); // clear current buffer
+			curPixelX = 0; curPixelY = 0; // reset next pixel to be rendered
+			loadScene(); // load the scene
+			refresh();
+			RIC.clear();
+			setTimeout("render()",0); // render
+		}
+		
+		// reset all the pixel to white color
+		function clearBuffer() {
+			var curPixel = 0;
+			for(curPixelY = 0; curPixelY < height; ++curPixelY) {
+				for(curPixelX = 0; curPixelX < width; ++curPixelX) {
+					pixBuffer[4*curPixel+0] = 1.0;
+					pixBuffer[4*curPixel+1] = 1.0;
+					pixBuffer[4*curPixel+2] = 1.0;
+					pixBuffer[4*curPixel+3] = 1.0;
+					curPixel++;
+				}
+			}
+		}
+		
+		// update the canvas with currently computed colors
+		function refresh() {
+			for(var i = 0; i < pixBuffer.length; ++i) {
+				imgBuffer[i] = (pixBuffer[i]*255.0);
+			}
+			ctx.putImageData(imgData,0,0);
+		}
+		
+		// render the new 50 lines of pixels
+		function render() {
+			if(curPixelY == height) {
+				RIC.getInformation();
+				RIC.stop();
+				return; // rendering done
+			}
+			if(waitingForData > 0) { // textures are not loaded yet, wait for them
+				console.log("Some data are not loaded yet, waiting for them before starting to render");
+				setTimeout("render()",1000);
+				return;
+			}
+		
+			var color = $V(0,0,0);
+			var curPixel = curPixelY*width;
+			for(var i = 0; i < 50; ++i, ++curPixelY) {
+				for(curPixelX = 0; curPixelX < width; ++curPixelX) {
+					// compute the color for the current pixel
+					trace(color, curPixelX, curPixelY);
+				
+					// copy the result in the buffer
+					pixBuffer[4*curPixel+0] = color.x;
+					pixBuffer[4*curPixel+1] = color.y;
+					pixBuffer[4*curPixel+2] = color.z;
+					pixBuffer[4*curPixel+3] = 1.0;
+					curPixel++;
+					color.setElements(0, 0, 0);
+				}
+			}
+			refresh(); // update screen
+			
+			// call render as soon as possible to compute next pixel values
+			setTimeout("render()",0);
+		}
+		
+		// export the canvas in a PNG file
+		function exportPNG() {
+			var data = canv.toDataURL("image/png");
+			data = data.replace("image/png", "image/octet-stream");
+			document.getElementById("exportLink").href = data;
+			document.getElementById("exportLink").download = "cg-ex1-Wang Zhengrong-moduleid.png";
+			document.getElementById("exportLink").click();
+		}
+		
+		function debugPixel(x,y) {
+			var color = $V(0,0,0);
+			trace(color, x, y);
+			console.log("Pixel ("+x+","+y+"): RGB -> "+color.x+" "+color.y+" "+color.z);
+		}
+		
+
+	</script>
+
+	<style>
+
+	body, button {
+		font-family: 'Verdana', 'Geneva', sans-serif;
+		font-size: 14pt;
+	}
+
+	</style>
+
+</head>
+
+<body onload="load()">
+
+	<div style="width: 800px; margin-left: auto; margin-right: auto;">
+		<div id="myUI" style="text-align:center;">
+			<button onclick="startRendering()" style="width: 396px; height: 40px;">Render</button>
+			
+			<button onclick="exportPNG()" style="width: 396px; height: 40px;">Export</button>
+			<!-- hidden link needed to export the image as a PNG -->
+			<a id="exportLink" download="" href=""></a>
+		</div>
+
+		<div id="myCanvasDiv">
+			<canvas id="myCanvas" width="800" height="600"></canvas>
+		</div>
+		
+	</div>
+
+	<div id = 'menu'>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			Default: 
+			</div>
+			<div calss = 'content'>
+			Basic module.
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			B1: 
+			</div>
+			<div calss = 'content'>
+			Reflection and refraction.
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			B2: 
+			</div>
+			<div calss = 'content'>
+			Anti-alias.
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			B3: 
+			</div>
+			<div calss = 'content'>
+			Quadrics.
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			B4: 
+			</div>
+			<div calss = 'content'>
+			Stereoscopic.
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			C1: 
+			</div>
+			<div calss = 'content'>
+			Implicit function.
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			C2: 
+			</div>
+			<div calss = 'content'>
+			Texture and bump mapping.<br>
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			C3: 
+			</div>
+			<div calss = 'content'>
+			Triangle meshes.<br>
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			D1: 
+			</div>
+			<div calss = 'content'>
+			OC Tree.
+			Need to be improved
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			Bonus1: 
+			</div>
+			<div calss = 'content'>
+			Depth of field.
+			</div>
+		</div>
+		<div class = 'module'>
+			<div class = 'moduleID'>
+			Bonus2: 
+			</div>
+			<div calss = 'content'>
+			Monte Carlo for soft shadow.
+			</div>
+		</div>
+
+	</div>
+
+</body>
+</html>
