@@ -3,10 +3,10 @@ ETH-Zuerich Computer Graphics 2014
 
 This is the ETHZ Computer Graphics 2014 assignments, with JavaScript and WebGL. 
 
-*[Ray Tracer]()
-*[BRDF with Perlin Noise]()
-*[BSpline]()
-*[Surface Subdivision]()
+- [Ray Tracer](./Exercise 1 & 2 Ray Tracer/rayTracer.html)<br/>
+- [BRDF with Perlin Noise]()<br/>
+- [BSpline]()<br/>
+- [Surface Subdivision]()<br/>
 
 ## Ex1-2: Ray Tracer
 
