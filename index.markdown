@@ -5,7 +5,7 @@ This is the ETHZ Computer Graphics 2014 assignments, with JavaScript and WebGL.
 
 - [Ray Tracer](./Exercise 1 & 2 Ray Tracer/rayTracer.html)<br/>
 - [BRDF with Perlin Noise](./Exercise 4 & 6 BRDF & Perlin Noise/src/lab_brdf.html)<br/>
-- [BSpline](./Exercise 5 BSpline & Subdivision/curves/bsplineEditior.html)<br/>
+- [BSpline](./Exercise 5 BSpline & Subdivision/curves/bsplineEditor.html)<br/>
 - [Surface Subdivision](./Exercise 5 BSpline & Subdivision/surfaces/subdivision.html)<br/>
 
 ## Ex1 - 2: Ray Tracer
