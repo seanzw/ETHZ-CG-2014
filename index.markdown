@@ -21,7 +21,6 @@
 <meta property="og:url" content="https://zerowong.github.io/ETHZ-CG-2014" />
 
 </head>
-
 ETH-Zuerich Computer Graphics 2014
 ==========
 
