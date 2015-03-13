@@ -1018,11 +1018,11 @@ body .markdown-body
 <p>This is the ETHZ Computer Graphics 2014 assignments, with JavaScript and WebGL. </p>
 <ul>
 <li><a href="./Exercise 1 &amp; 2 Ray Tracer/rayTracer.html">Ray Tracer</a><br/></li>
-<li><a href="">BRDF with Perlin Noise</a><br/></li>
-<li><a href="">BSpline</a><br/></li>
-<li><a href="">Surface Subdivision</a><br/></li>
+<li><a href="./Exercise 4 &amp; 6 BRDF &amp; Perlin Noise/src/lab_brdf.html">BRDF with Perlin Noise</a><br/></li>
+<li><a href="./Exercise 5 BSpline &amp; Subdivision/curves/bsplineEditior.html">BSpline</a><br/></li>
+<li><a href="./Exercise 5 BSpline &amp; Subdivision/surfaces/subdivision.html">Surface Subdivision</a><br/></li>
 </ul>
-<h2 id="ex1-2-ray-tracer"><a name="user-content-ex1-2-ray-tracer" href="#ex1-2-ray-tracer" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Ex1-2: Ray Tracer</h2>
+<h2 id="ex1-2-ray-tracer"><a name="user-content-ex1-2-ray-tracer" href="#ex1-2-ray-tracer" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Ex1 - 2: Ray Tracer</h2>
 <p>This is a ray tracer. It may be slow since it doesn&rsquo;t using WebGL. You can pass the following module IDs by the get method.</p>
 <h3 id="c1-boolean-operation"><a name="user-content-c1-boolean-operation" href="#c1-boolean-operation" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>C1 Boolean operation</h3>
 <p>Notice that all the implicit surface required here (sphere, plane) can be represented as quardric. So I first implement a conic class. It contains a matrix C and all the points on the conic would satisfy P^{T}CP=0. Hence the ray-object intersection test is just solving a quadratic equation.</p>
@@ -1055,4 +1055,36 @@ To be more spercific, here we are dealing with the sphere. If a ray hits the sph
 <h3 id="bonus-2-area-light"><a name="user-content-bonus-2-area-light" href="#bonus-2-area-light" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Bonus 2 Area Light</h3>
 <p>There is nothing much to talk about here. Just uniformly sample 50 point lights and use them to generate the soft shadow.</p>
 <h3 id="bonus-3-ambient-occlusion"><a name="user-content-bonus-3-ambient-occlusion" href="#bonus-3-ambient-occlusion" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Bonus 3 Ambient Occlusion</h3>
-<p>I tried to use other objects than sphere, but it just turns out to be so slow. So I just put a sphere and 2 planes. With 50 samples the ambient occlusion is acceptable.</p></article></body></html>
+<p>I tried to use other objects than sphere, but it just turns out to be so slow. So I just put a sphere and 2 planes. With 50 samples the ambient occlusion is acceptable.</p>
+<h2 id="ex4-6-brdf-and-perlin-noise"><a name="user-content-ex4-6-brdf-and-perlin-noise" href="#ex4-6-brdf-and-perlin-noise" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Ex4 &amp; 6: BRDF and Perlin Noise</h2>
+<p>This is my solution to BRDF exercise of ethz computer graphics 2014. There are two materials, polished steel and hematite. The default material is steel. If you want to get hematite, please adjust the parameters as described in each BRDF. You can always modify the brightness by changing the intensity of the three point light source.</p>
+<h3 id="lambertian"><a name="user-content-lambertian" href="#lambertian" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Lambertian</h3>
+<p>The Lambertian BRDF is not enought to simulate the steel and hematite since there is no specular term.</p>
+<h3 id="phong"><a name="user-content-phong" href="#phong" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Phong</h3>
+<p>Phong is not enought to render the steel as it always gives a plastic feeling. The only thing we can do is modify the shineness of the material. Hematite looks good.</p>
+<h3 id="blinn-phong"><a name="user-content-blinn-phong" href="#blinn-phong" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Blinn-Phong</h3>
+<p>Blinn-Phong uses the halfway vector and simplify the calculation. Steel still looks like plastic.</p>
+<h3 id="ward"><a name="user-content-ward" href="#ward" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Ward</h3>
+<p>Ward&rsquo;s anisotropic model is enough to model these two materials. I find a precise and cheaper formula from <a href="http://www.graphics.cornell.edu/~bjw/wardnotes.pdf">Cornell University</a>. For steel alphaX is 0.2 and alphaY = 0.8. For Hematite alphaX = alphaY = 0.2. And the result is pretty good.</p>
+<h3 id="cook-torrance"><a name="user-content-cook-torrance" href="#cook-torrance" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Cook-Torrance</h3>
+<p>Here the steel looks nice. The hematite is also very good. And I use two weighted Beckmann distributions.</p>
+<p>For Steel the IOR is 2.5. </p>
+<p>For Hematite the IOR is 2.9. The both Beckmann distribution is set to 0.2. Kd equals 0.3.</p>
+<h3 id="spatially-varying-brdf"><a name="user-content-spatially-varying-brdf" href="#spatially-varying-brdf" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Spatially Varying BRDF</h3>
+<p>I tried to use perlin noise but still can&rsquo;t figure out how to generate the rusty steel. Here I just generate some weird marble texture. The generator of perlin noise comes from <a href="https://github.com/ashima/webgl-noise">here</a></p>
+<h3 id="wood"><a name="user-content-wood" href="#wood" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Wood</h3>
+<p>Apply 3D Perlin noise to get a wood texture.</p>
+<h3 id="marble"><a name="user-content-marble" href="#marble" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Marble</h3>
+<p>Apply 3D Perlin noise to get a marble texture.</p>
+<h3 id="earth"><a name="user-content-earth" href="#earth" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Earth</h3>
+<p>Use 4D Perlin noise to animate the cloud. And 3D Perlin noise to generate the surface.</p>
+<h2 id="ex5-bspline-and-surface-subdivision"><a name="user-content-ex5-bspline-and-surface-subdivision" href="#ex5-bspline-and-surface-subdivision" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Ex5: BSpline and Surface Subdivision</h2>
+<p>This the solution for exercise 5.</p>
+<h3 id="bspline"><a name="user-content-bspline" href="#bspline" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>BSpline</h3>
+<p>Not much to say about BSpline. Just use de Boor algorithm to generate points on the spline and connect them.</p>
+<h3 id="surface-subdivision"><a name="user-content-surface-subdivision" href="#surface-subdivision" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Surface Subdivision</h3>
+<h4 id="loop"><a name="user-content-loop" href="#loop" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Loop</h4>
+<p>Loop&rsquo;s algorithm can only deal with triangle mesh. And it&rsquo;s easy to implement. Use different weight for the boundary and then everything is fine.</p>
+<h4 id="catmull-clark"><a name="user-content-catmull-clark" href="#catmull-clark" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>Catmull-Clark</h4>
+<p>Here I found three ways to deal with the boundary.(<a href="http://xrt.wikidot.com/blog:_start/tag/catmull/category/blog">here</a>). I choose the second one and the boundary looks quite well.</p>
+<p>It takes every boundary edge as infinitely sharp creases, which means the edge point on this boundary edge will be the average of two endpoints of this edge. And all the boundary vertices are treated as creases vertices. The new vertice is a weighted average of the old vertice (3/4) and two other boundary vertices(1/8).</p></article></body></html>

@@ -1,0 +1,19 @@
+[
+    {
+        "label": "Intensity",
+        "uniform": "intensity",
+        "min": 2,
+        "max": 10,
+        "step": 1,
+        "default": [3, 3]
+    },
+
+	{
+		"label": "Specular Power Index",
+		"uniform": "materialSpecularPower",
+		"min": 64,
+		"max": 192,
+		"step": 1,
+		"default": [128, 132]
+	}
+]
