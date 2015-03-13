@@ -1,3 +1,27 @@
+<head profile="http://gmpg.org/xfn/11">
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<meta name="viewport" content="width=device-width, initial-scale = 1 user-scalable=no" />
+
+<meta name = "viewport" content = "height = device-height, initial-scale = 1 user-scalable=no" />
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+<meta name="keywords" content="ETHZ-CG-2014">
+
+<meta name="description" content="ETHZ-CG-2014">
+
+<meta name="author" content="Zhengrong Wang">
+
+<meta property="og:title" content="ETHZ-CG-2014" />
+
+<meta property="og:type" content="project" />
+
+<meta property="og:url" content="https://zerowong.github.io/ETHZ-CG-2014" />
+
+</head>
+
 ETH-Zuerich Computer Graphics 2014
 ==========
 
